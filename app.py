@@ -1,7 +1,8 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, Response, stream_with_context
 from flask_cors import CORS
 from openai import OpenAI
 from config import apikey
+import json
 
 client = OpenAI(api_key=apikey)
 app = Flask(__name__)
@@ -30,19 +31,27 @@ def chat():
         # Keep only last 10 messages to avoid token limits
         recent_history = conversation_history[-10:]
 
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",  # Fixed model name (was "gpt-4.1-mini")
-            messages=recent_history,
-            temperature=0.7,
-            max_tokens=500
-        )
+        def generate():
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=recent_history,
+                temperature=0.7,
+                max_tokens=500,
+                stream=True
+            )
 
-        reply = response.choices[0].message.content
+            full_response = ""
+            for chunk in response:
+                if chunk.choices[0].delta.content:
+                    content = chunk.choices[0].delta.content
+                    full_response += content
+                    yield f"data: {json.dumps({'content': content})}\n\n"
 
-        # Add assistant response to history
-        conversation_history.append({"role": "assistant", "content": reply})
+            # Add complete response to history
+            conversation_history.append({"role": "assistant", "content": full_response})
+            yield f"data: {json.dumps({'done': True})}\n\n"
 
-        return jsonify({"reply": reply})
+        return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
     except Exception as e:
         print(f"Error: {e}")
