@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARVIS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+            background: #0f0f0f;
+            color: #ececec;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: #171717;
+            border-right: 1px solid #2f2f2f;
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+        }
+
+        .new-chat-btn {
+            background: #1f1f1f;
+            border: 1px solid #2f2f2f;
+            color: #ececec;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .new-chat-btn:hover {
+            background: #2f2f2f;
+        }
+
+        .logo {
+            padding: 20px 16px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #ececec;
+            letter-spacing: 0.5px;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            height: 60px;
+            border-bottom: 1px solid #2f2f2f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0f0f0f;
+        }
+
+        .model-selector {
+            background: #1f1f1f;
+            border: 1px solid #2f2f2f;
+            color: #ececec;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .chat-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #2f2f2f;
+            border-radius: 3px;
+        }
+
+        .empty-state {
+            max-width: 700px;
+            margin: 0 auto;
+            text-align: center;
+            padding-top: 15vh;
+        }
+
+        .empty-state h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 40px;
+            color: #ececec;
+        }
+
+        .suggestions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .suggestion-card {
+            background: #1f1f1f;
+            border: 1px solid #2f2f2f;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .suggestion-card:hover {
+            background: #2a2a2a;
+        }
+
+        .suggestion-card h3 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .suggestion-card p {
+            font-size: 12px;
+            color: #8e8e8e;
+        }
+
+        .messages {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .message {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 16px;
+        }
+
+        .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-avatar {
+            background: #19c37d;
+            color: white;
+        }
+
+        .bot-avatar {
+            background: #ab68ff;
+            color: white;
+        }
+
+        .message-content {
+            flex: 1;
+            padding-top: 3px;
+        }
+
+        .message-content p {
+            line-height: 1.6;
+            color: #ececec;
+            font-size: 15px;
+        }
+
+        .input-area {
+            max-width: 700px;
+            margin: 0 auto 20px auto;
+            padding: 0 20px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            background: #2f2f2f;
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid #3f3f3f;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #565656;
+        }
+
+        #msg {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ececec;
+            font-size: 15px;
+            font-family: inherit;
+            resize: none;
+            max-height: 200px;
+        }
+
+        #msg::placeholder {
+            color: #6e6e6e;
+        }
+
+        .send-btn {
+            width: 32px;
+            height: 32px;
+            background: #ececec;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: #d0d0d0;
+        }
+
+        .send-btn:disabled {
+            background: #3f3f3f;
+            cursor: not-allowed;
+        }
+
+        .send-icon {
+            width: 18px;
+            height: 18px;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            color: #6e6e6e;
+            font-size: 14px;
+            padding-top: 3px;
+        }
+
+        .typing-indicator.active {
+            display: flex;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background: #6e6e6e;
+            border-radius: 50%;
+            animation: pulse 1.4s infinite;
+        }
+
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes pulse {
+            0%, 80%, 100% { opacity: 0.3; }
+            40% { opacity: 1; }
+        }
+
+        .footer-text {
+            text-align: center;
+            font-size: 12px;
+            color: #6e6e6e;
+            padding: 12px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <button class="new-chat-btn" onclick="newChat()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"/>
+            </svg>
+            New chat
+        </button>
+        <div class="logo">JARVIS</div>
+    </div>
+
+    <div class="main-content">
+        <div class="chat-header">
+            <select class="model-selector">
+                <option>GPT-4o-mini</option>
+            </select>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <div class="empty-state" id="emptyState">
+                <h1>How can I help you today?</h1>
+                <div class="suggestions">
+                    <div class="suggestion-card" onclick="useSuggestion('Create a Python script for data analysis')">
+                        <h3>Create a script</h3>
+                        <p>Python data analysis tools</p>
+                    </div>
+                    <div class="suggestion-card" onclick="useSuggestion('Explain quantum computing in simple terms')">
+                        <h3>Explain a concept</h3>
+                        <p>Quantum computing basics</p>
+                    </div>
+                    <div class="suggestion-card" onclick="useSuggestion('Help me debug my code')">
+                        <h3>Debug code</h3>
+                        <p>Find and fix errors</p>
+                    </div>
+                    <div class="suggestion-card" onclick="useSuggestion('Write a professional email')">
+                        <h3>Write content</h3>
+                        <p>Professional email</p>
+                    </div>
+                </div>
+            </div>
+            <div class="messages" id="messages"></div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <textarea id="msg" placeholder="Message JARVIS" rows="1"></textarea>
+                <button class="send-btn" id="sendBtn" onclick="send()">
+                    <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="footer-text">JARVIS can make mistakes. Consider checking important information.</div>
+        </div>
+    </div>
+
+    <script>
+        const msgInput = document.getElementById('msg');
+        const sendBtn = document.getElementById('sendBtn');
+        const chatArea = document.getElementById('chatArea');
+        const emptyState = document.getElementById('emptyState');
+        const messages = document.getElementById('messages');
+
+        msgInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+        });
+
+        msgInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                send();
+            }
+        });
+
+        function useSuggestion(text) {
+            msgInput.value = text;
+            send();
+        }
+
+        function newChat() {
+            messages.innerHTML = '';
+            emptyState.style.display = 'block';
+            msgInput.value = '';
+            msgInput.style.height = 'auto';
+        }
+
+        async function send() {
+            const message = msgInput.value.trim();
+            if (!message) return;
+
+            if (emptyState.style.display !== 'none') {
+                emptyState.style.display = 'none';
+            }
+
+            addMessage(message, 'user');
+            msgInput.value = '';
+            msgInput.style.height = 'auto';
+
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message';
+            typingDiv.innerHTML = `
+                <div class="avatar bot-avatar">J</div>
+                <div class="message-content">
+                    <div class="typing-indicator active">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+            `;
+            messages.appendChild(typingDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            msgInput.disabled = true;
+            sendBtn.disabled = true;
+
+            try {
+                const res = await fetch("http://127.0.0.1:5000/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await res.json();
+                typingDiv.remove();
+                addMessage(data.reply, 'bot');
+
+            } catch (error) {
+                typingDiv.remove();
+                addMessage("I'm having trouble connecting. Please make sure the server is running.", 'bot');
+                console.error('Error:', error);
+            } finally {
+                msgInput.disabled = false;
+                sendBtn.disabled = false;
+                msgInput.focus();
+            }
+        }
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+
+            const avatar = sender === 'user' ?
+                '<div class="avatar user-avatar">Y</div>' :
+                '<div class="avatar bot-avatar">J</div>';
+
+            messageDiv.innerHTML = `
+                ${avatar}
+                <div class="message-content">
+                    <p>${escapeHtml(text)}</p>
+                </div>
+            `;
+
+            messages.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML.replace(/\n/g, '<br>');
+        }
+
+        msgInput.focus();
+    </script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+OpenAI response for Prompt: using artificial intelligence write a program python to make star using Turtle
+*****************
+
+Certainly! Below is a Python program that uses the `turtle` module to draw a star using artificial intelligence-like logic. While Turtle graphics itself is straightforward, I'll add a bit of "intelligence" by defining a function that calculates the star points dynamically based on the number of points and size, which could be considered a simple form of procedural generation.
+
+```python
+import turtle
+import math
+
+def draw_star(t, points, radius):
+    """
+    Draw a star with the given number of points and radius.
+    
+    Parameters:
+    t (turtle.Turtle): The turtle object to draw with.
+    points (int): Number of points in the star.
+    radius (int): Radius of the circumcircle of the star.
+    """
+    if points < 5:
+        print("Number of points must be at least 5.")
+        return
+    
+    # Calculate the angle between star points
+    angle = 180 - (180 / points)
+    
+    # Move turtle to starting position
+    t.penup()
+    t.goto(0, -radius)
+    t.pendown()
+    
+    # Set initial heading
+    t.setheading(90 + (180 / points))
+    
+    for _ in range(points):
+        t.forward(radius)
+       
